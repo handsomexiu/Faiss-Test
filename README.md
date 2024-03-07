@@ -22,7 +22,7 @@
 
 3. 如果想要修改创建数据库的类型，可以修改`faiss_get_report.py`下的
 
-   1. ![image-20240307100900991](photo\change_faiss.png)
+   1. ![image-20240307100900991](photo/change_faiss.png)
 
 4. 创建数据库的相关文件是`faiss_database_create.py`创建的方式采用的是`faiss.index_factory(dim, param, measure)`具体可看
 
@@ -32,7 +32,7 @@
 
    1. 如果想要修改数据集，注意需要修改`faiss_get_report.py`下的`data_choice`和`dim`参数，这两个参数要与`config.py`中的字典`data_info`中信息匹配
 
-   2. ![image-20240307101537924](photo\data_choice.png)
+   2. ![image-20240307101537924](photo/data_choice.png)
 
       ```python
       data_info={
@@ -50,3 +50,7 @@
 
 7. 这里还有关于faiss的一些个人学习资料，具体可看同文件夹下的：`Faiss-HNSW.md`
 
+# 文件修改说明
+
+1. `faiss_get_report2.py`
+   1. 这里相对于`faiss_get_report.py`将子图那一块修改了，直接观察子图不方便对比，这边将子图换成了在一个图中画多条折线图。`config.py`没有修改，关于多折线图依然对应`set_xlabel,set_ylabel`
