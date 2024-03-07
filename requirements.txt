@@ -1,0 +1,5 @@
+torch==2.1.0#cpu版本
+faiss-cpu==1.7.4
+numpy==1.24.2
+matplotlib==3.6.3
+h5py==3.8.0
