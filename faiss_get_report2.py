@@ -198,7 +198,7 @@ def plot_multiple_lines(task_choice: str, data_dict: dict, data_choice: str = 'g
         # 选择不同颜色，可以根据需要修改颜色
         line_color = plt.cm.viridis(i / num_lines)
         # 在同一个图中绘制多条折线图，并设置标签位置在图外
-        sub_label=task_data_plot[task_choice]['set_label']
+        sub_label=task_data_plot[task_choice]['set_title']
         plt.plot(x_values, y_values, marker='o', label=f'{sub_label} {key1[i]}', color=line_color)
     # 添加标签和标题
     set_xlabel, set_ylabel = task_data_plot[task_choice]['set_xlabel'], task_data_plot[task_choice][
