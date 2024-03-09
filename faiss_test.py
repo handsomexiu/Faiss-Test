@@ -19,6 +19,26 @@ def get_test_data(data_choice:str='glove',dim:int=25,number:int=100):#这里定�
     glove_distances = glove_hdf['distances'][:number]# 获取测试数据集
     return glove_test,glove_neighbors,glove_distances
 
+# 获取id
+def get_id(data_choice:str='glove',n_piece:int=5,dim:int=25):
+    data_name= data_info[data_choice][dim]
+    glove_file_path = f"data/{data_name}.hdf5"# 数据地址，hdf5格式
+    glove_hdf = h5py.File(glove_file_path, "r")# 读取数据
+    length_all = len(glove_hdf['train'])# 获取数据的总长度  
+    cut_point=int(length_all/n_piece)# 获取切分点,int是向下取整
+    id_dict={}# 这里用字典来存取每一段对应的索引
+    for i in range(n_piece):
+        keys='npiece_'+str(i+1)
+        if i+1 == n_piece:
+            id=list(range(i*cut_point,length_all))
+            id=np.array(id)
+            id_dict[keys]=id
+        else:
+            id=list(range(i*cut_point,(i+1)*cut_point))
+            id=np.array(id)
+            id_dict[keys]=id
+    return id_dict
+
 # 测试数据集的拼接
 def combine_list(data: list, ids: list, k: int = 100):
     # 将每个元素和对应ID放在一个元组中
@@ -38,15 +58,19 @@ def get_search_result(data_choice:str='glove',n_piece:int=5,dim:int=25,k:int=100
     folder_path = create_folder_if_not_exists(data_name,n_piece)
     golve_test,_,_=get_test_data(data_choice,dim,number)# 这是一个双层数组，因为有这么多测试数据集
     # 测试数据提取
+    id_dict=get_id(data_choice,n_piece,dim)
+    # print(id_dict)
     search_id=[]
     search_distance=[]
     for i in range(n_piece):
         data_key=data_name+'_n'+str(n_piece)+'_'+str(i+1)
+        keys='npiece_'+str(i+1)
         print(f'正在处理数据集{data_key}')
         file_path = f"{folder_path}/{data_key}.index"
         index = faiss.read_index(file_path)
         sd,sid=index.search(golve_test, k)
-        search_id.append(sid)
+        id_real=id_dict[keys][sid]
+        search_id.append(id_real)
         search_distance.append(sd)
     search_id=np.array(search_id)
     search_distance=np.array(search_distance)
@@ -105,5 +129,6 @@ if __name__ == "__main__":
     k:int,  这里是查询的k个最近邻即topk,默认值为100
     number:int, 这里是选取的测试数据的数量，默认值为100。number不能大于测试数据的总量，glove和sift都是10,000    
     '''
-    get_recall(data_choice='glove',n_piece=5,dim=25,k=100,number=100)
+    rm,et=get_recall(data_choice='glove',n_piece=5,dim=25,k=100,number=100)
+    print(f'召回率为{rm},查询时间为{et}秒')
     # get_recall('glove',5,25,100,100) 
