@@ -109,9 +109,9 @@ def get_report_n_piece_number(data_choice:str='glove',dim:int=25,n_piece:list=[1
 # -----------------------可视化-------------------------
 
 # 创建存储图片所需要的文件夹
-def create_photo_store(data_choice:str='glove',dim:int=25):
+def create_photo_store(data_choice:str='glove',dim:int=25,faiss_style:str='HNSW64'):
     data_name= data_info[data_choice][dim]
-    folder_path = f"figure/{data_name}"
+    folder_path = f"figure/{data_name}_{faiss_style}"
     # 检查文件夹是否存在
     if not os.path.exists(folder_path):
         # 不存在时创建文件夹
@@ -122,9 +122,9 @@ def create_photo_store(data_choice:str='glove',dim:int=25):
     return folder_path
 
 # create_index_time结果可视化
-def plot_create_index_time(create_index_time:dict,data_choice:str='glove',dim:int=25):
+def plot_create_index_time(create_index_time:dict,data_choice:str='glove',dim:int=25,faiss_style:str='HNSW64'):
     # 首先时创建存储图片的文件夹
-    folder_path=create_photo_store(data_choice,dim)
+    folder_path=create_photo_store(data_choice,dim,faiss_style)
     file_path = f"{folder_path}/create_index_time.png"
     # plt.figure(figsize=(10, 6))
     x_values=list(create_index_time.keys())
@@ -150,9 +150,9 @@ def plot_create_index_time(create_index_time:dict,data_choice:str='glove',dim:in
 
 # 画柱状图。这里的task_choice是用来选择我们要执行的任务类型，这个在config.py中有定义。task_data_plot这个字典中
 # data_dict是该任务对应的输出的数据
-def plot_bar3d(task_choice:str,data_dict:dict, data_choice:str='glove', dim:int=25):
+def plot_bar3d(task_choice:str,data_dict:dict, data_choice:str='glove', dim:int=25,faiss_style:str='HNSW64'):
     # 首先时创建存储图片的文件夹
-    folder_path=create_photo_store(data_choice,dim)
+    folder_path=create_photo_store(data_choice,dim,faiss_style)
     file_path = f"{folder_path}/{task_choice}_bar3d.png"
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
@@ -182,9 +182,9 @@ def plot_bar3d(task_choice:str,data_dict:dict, data_choice:str='glove', dim:int=
     # plt.show()
 
 # 用于画多折线图，多个子图不易于对比
-def plot_multiple_lines(task_choice: str, data_dict: dict, data_choice: str = 'glove', dim: int = 25):
+def plot_multiple_lines(task_choice: str, data_dict: dict, data_choice: str = 'glove', dim: int = 25,faiss_style:str='HNSW64'):
     # 创建文件夹并确定文件路径
-    folder_path = create_photo_store(data_choice, dim)
+    folder_path = create_photo_store(data_choice, dim,faiss_style)
     file_path = f"{folder_path}/{task_choice}_multiple_lines.png"
     key1 = list(data_dict.keys())  # 这里的key1是number of npiece
     num_lines = len(data_dict)
@@ -223,6 +223,8 @@ if __name__ == "__main__":
     data_choice:数据集的选择，glove或者sift
     task_choice:任务的选择，这个在config.py中有定义(其实就是对应上述几个任务的输出，要求命名规范)
     param:faiss中的参数，这个与创建什么类型的数据库有关
+    faiss_style:str='HNSW64'和param是一样的且需要保持一致
+    param:主要来创建相关类型数据库，faiss_style是用来命名文件夹的
     '''
     #---------------执行任务----------------
     # 创建不同分片大小的向量数据库所需要的时间对比
@@ -245,22 +247,22 @@ if __name__ == "__main__":
     
     #---------------可视化----------------
     # create_index_time可视化
-    plot_create_index_time(create_index_time)
+    plot_create_index_time(create_index_time, data_choice='glove', dim=25,faiss_style='HNSW64')
     # report_n_piece_k可视化
-    plot_bar3d('search_time_npiece_k',search_time_npiece_k, data_choice='glove', dim=25)
-    plot_bar3d('search_recall_npiece_k',search_recall_npiece_k, data_choice='glove', dim=25)
-    plot_multiple_lines('search_time_npiece_k',search_time_npiece_k, data_choice='glove', dim=25)
-    plot_multiple_lines('search_recall_npiece_k',search_recall_npiece_k, data_choice='glove', dim=25)
+    plot_bar3d('search_time_npiece_k',search_time_npiece_k, data_choice='glove', dim=25,faiss_style='HNSW64')
+    plot_bar3d('search_recall_npiece_k',search_recall_npiece_k, data_choice='glove', dim=25,faiss_style='HNSW64')
+    plot_multiple_lines('search_time_npiece_k',search_time_npiece_k, data_choice='glove', dim=25,faiss_style='HNSW64')
+    plot_multiple_lines('search_recall_npiece_k',search_recall_npiece_k, data_choice='glove', dim=25,faiss_style='HNSW64')
     # report_number_k可视化
-    plot_bar3d('search_time_number_k',search_time_number_k, data_choice='glove', dim=25)
-    plot_bar3d('search_recall_number_k',search_recall_number_k, data_choice='glove', dim=25)
-    plot_multiple_lines('search_time_number_k',search_time_number_k, data_choice='glove', dim=25)
-    plot_multiple_lines('search_recall_number_k',search_recall_number_k, data_choice='glove', dim=25)
+    plot_bar3d('search_time_number_k',search_time_number_k, data_choice='glove', dim=25,faiss_style='HNSW64')
+    plot_bar3d('search_recall_number_k',search_recall_number_k, data_choice='glove', dim=25,faiss_style='HNSW64')
+    plot_multiple_lines('search_time_number_k',search_time_number_k, data_choice='glove', dim=25,faiss_style='HNSW64')
+    plot_multiple_lines('search_recall_number_k',search_recall_number_k, data_choice='glove', dim=25,faiss_style='HNSW64')
     # report_n_piece_number可视化
-    plot_bar3d('search_time_npiece_number',search_time_npiece_number, data_choice='glove', dim=25)
-    plot_bar3d('search_recall_npiece_number',search_recall_npiece_number, data_choice='glove', dim=25)
-    plot_multiple_lines('search_time_npiece_number',search_time_npiece_number, data_choice='glove', dim=25)
-    plot_multiple_lines('search_recall_npiece_number',search_recall_npiece_number, data_choice='glove', dim=25)
+    plot_bar3d('search_time_npiece_number',search_time_npiece_number, data_choice='glove', dim=25,faiss_style='HNSW64')
+    plot_bar3d('search_recall_npiece_number',search_recall_npiece_number, data_choice='glove', dim=25,faiss_style='HNSW64')
+    plot_multiple_lines('search_time_npiece_number',search_time_npiece_number, data_choice='glove', dim=25,faiss_style='HNSW64')
+    plot_multiple_lines('search_recall_npiece_number',search_recall_npiece_number, data_choice='glove', dim=25,faiss_style='HNSW64')
 
 
 

@@ -32,8 +32,8 @@ def data_piece(data_choice:str='glove',n_piece:int=5,dim:int=25)->dict:# 如果d
     return data_dict,data_name
 
 # 创建向量数据库所需要的文件夹
-def create_folder_if_not_exists(data_name:str,n_piece:int=5)->str:#这里的n_piece需要与data_piece函数中的n_piece一致
-    folder_path = f"index/{data_name}_n{n_piece}"
+def create_folder_if_not_exists(data_name:str,n_piece:int=5,faiss_style:str='HNSW64')->str:#这里的n_piece需要与data_piece函数中的n_piece一致
+    folder_path = f"index/{data_name}_{faiss_style}_n{n_piece}"
     # 检查文件夹是否存在
     if not os.path.exists(folder_path):
         # 不存在时创建文件夹
@@ -47,9 +47,9 @@ def create_folder_if_not_exists(data_name:str,n_piece:int=5)->str:#这里的n_pi
 # 关于向量数据库所需要的一些个参数也可以设为该函数需要传的参数如measure, param
 # 这里的关于分片后的数据的id还得自定义一下
 def create_index(data_choice:str='glove',n_piece:int=5,dim:int=25,param:str='HNSW64'):# 如果data_choice是glove则dim必须是25,50,100,200，如果是sift则dim必须是128，否则会报错
-    # data_dict,id_dict,data_name=data_piece(data_choice,n_piece,dim)
     data_dict,data_name=data_piece(data_choice,n_piece,dim)
-    folder_path = create_folder_if_not_exists(data_name,n_piece)
+    faiss_style=param
+    folder_path = create_folder_if_not_exists(data_name,n_piece,faiss_style)
     for i in range(n_piece):
         data_key=data_name+'_n'+str(n_piece)+'_'+str(i+1) # 我们统一这样命名
         file_path = f"{folder_path}/{data_key}.index"
@@ -78,6 +78,7 @@ if __name__ == "__main__":
     n_piece:int,默认为5,表示数据分片的数量
     dim:int,默认为25,表示数据的维度。如果选择了glove则dim必须是25,50,100,200 ,如果选择了sift则dim必须是128
     param:str,默认为'HNSW64',表示faiss的索引参数，具体可以参考faiss的官方文档
+    faiss_style:str,默认为'HNSW64',表示faiss的索引参数，具体可以参考faiss的官方文档。这里等价于create_index中的param
     '''
     create_index(data_choice='glove',n_piece=5,dim=25,param='HNSW64')#自定义参数传入
     # create_index('glove',5,25,'HNSW64')

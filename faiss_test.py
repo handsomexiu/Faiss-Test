@@ -52,10 +52,10 @@ def combine_list(data: list, ids: list, k: int = 100):
 
 # 获取测试结果
 # 这里不需要传参measure，因为两个数据集采用的measure=faiss.METRIC_L2是一样的，除了glove需要加一个归一化
-def get_search_result(data_choice:str='glove',n_piece:int=5,dim:int=25,k:int=100,number:int=100):# number是指定测试集的数量,要和get_test_data函数中的number一致
+def get_search_result(data_choice:str='glove',n_piece:int=5,dim:int=25,k:int=100,number:int=100,faiss_style:str='HNSW64'):# number是指定测试集的数量,要和get_test_data函数中的number一致
     # data_dict,data_name=data_piece(data_choice,n_piece,dim)
     data_name= data_info[data_choice][dim] 
-    folder_path = create_folder_if_not_exists(data_name,n_piece)
+    folder_path = create_folder_if_not_exists(data_name,n_piece,faiss_style)
     golve_test,_,_=get_test_data(data_choice,dim,number)# 这是一个双层数组，因为有这么多测试数据集
     # 测试数据提取
     id_dict=get_id(data_choice,n_piece,dim)
@@ -103,11 +103,11 @@ def calculate_recall_np(test_id, ground_truth_id):
     recall = tp / len(ground_truth_id) if len(ground_truth_id) != 0 else 0.0
     return recall
 
-def get_recall(data_choice:str='glove',n_piece:int=5,dim:int=25,k:int=100,number:int=100):
+def get_recall(data_choice:str='glove',n_piece:int=5,dim:int=25,k:int=100,number:int=100,faiss_style:str='HNSW64'):
     # glove_test,distance_true和neighbors_true暂时没用到
     _,neighbors_true,_=get_test_data(data_choice,dim,number)
     start_time = time.time()
-    test_id,_=get_search_result(data_choice,n_piece,dim,k,number)
+    test_id,_=get_search_result(data_choice,n_piece,dim,k,number,faiss_style)
     end_time = time.time()
     elapsed_time = end_time - start_time # 计算查询所需的时间
     # print(test_id.shape,neighbors_true.shape)
@@ -126,9 +126,10 @@ if __name__ == "__main__":
 
     前三个参数都是为了构造正确的地址，来读取index数据
     ------------------------------------------------------------------
+    faiss_style:str='HNSW64'
     k:int,  这里是查询的k个最近邻即topk,默认值为100
     number:int, 这里是选取的测试数据的数量，默认值为100。number不能大于测试数据的总量，glove和sift都是10,000    
     '''
-    rm,et=get_recall(data_choice='glove',n_piece=5,dim=25,k=100,number=100)
+    rm,et=get_recall(data_choice='glove',n_piece=5,dim=25,k=100,number=100,faiss_style='HNSW64')
     print(f'召回率为{rm},查询时间为{et}秒')
     # get_recall('glove',5,25,100,100) 
