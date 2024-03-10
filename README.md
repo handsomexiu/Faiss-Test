@@ -12,7 +12,8 @@
 - [x] 对比不同分片数据库下，不同query数量下的查询时间和召回率对比
 - [ ] QPS-Recall测试
   - [x] HNSW的测试
-  - [ ] IVFPQ
+  - [ ] IVFPQR
+  - [ ] IVF-Flat
 
 
 
