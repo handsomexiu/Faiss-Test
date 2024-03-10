@@ -211,7 +211,7 @@ def plot_multiple_lines(task_choice: str, data_dict: dict, data_choice: str = 'g
     # 添加图例，并设置位置在图外
     plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
     # 保存图片
-    plt.savefig(file_path)
+    plt.savefig(file_path, bbox_inches='tight')
     # plt.show()
 
 

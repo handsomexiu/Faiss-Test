@@ -228,7 +228,7 @@ def plot_subplot(task_choice:str,data_dict:dict, data_choice:str='glove', dim:in
     plt_title=task_data_plot[task_choice]['title']
     plt.suptitle(plt_title)
     # 保存图片
-    plt.savefig(file_path)
+    plt.savefig(file_path, bbox_inches='tight')
     # plt.show()
 
 
