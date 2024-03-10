@@ -227,42 +227,39 @@ if __name__ == "__main__":
     param:主要来创建相关类型数据库，faiss_style是用来命名文件夹的
     '''
     #---------------执行任务----------------
+    # 首先定义采用的向量数据库的形式,在这里选择你要构造的数据库类型，参考index_factory的要求
+    faiss_style=param='HNSW64'
+
     # 创建不同分片大小的向量数据库所需要的时间对比
-    create_index_time=get_report_create_index_time(data_choice='glove',dim=25,n_piece=[1,5,10,15,20,25],param='HNSW64')
+    create_index_time=get_report_create_index_time(data_choice='glove',dim=25,n_piece=[1,5,10,15,20,25],param=param)
     # 不同切片数据库在不同k值下的查询时间和召回率对比，此时query是100
-    # _,search_time_npiece_k,search_recall_npiece_k=get_report_n_piece_k(data_choice='glove',dim=25,n_piece=[1,5,10,15,20,25],
-    #            k=[10,100,1000,5000,10000,50000,100000],number=100,param='HNSW64')
     _,search_time_npiece_k,search_recall_npiece_k=get_report_n_piece_k('glove',25,[1,5,10],
-                k=[10,100,1000,5000],number=100,param='HNSW64')
+                k=[10,100,1000,5000],number=100,param=param)
     # 此时npiece是固定的为5，对比不同数量query和k的查询时间和召回率对比
-    # search_time_number_k,search_recall_number_k=get_report_number_k(data_choice='glove',dim=25,n_piece=5,
-    #            k=[10,100,1000,5000,10000,50000,100000],number=[10,500,1000,5000,10000],param='HNSW64')
     search_time_number_k,search_recall_number_k=get_report_number_k('glove',25,5,k=[10,100,1000,5000],
-                number=[10,500,1000,5000],param='HNSW64')
+                number=[10,500,1000,5000],param=param)
     # 此时k固定为1000，对比不同分片数据库下，不同query数量下的查询时间和召回率对比
-    # _,search_time_npiece_number,search_recall_npiece_number=get_report_n_piece_number(data_choice='glove',dim=25,n_piece=[1,5,10,15,20,25],
-    #            k=1000,number=[10,500,1000,5000,10000],param='HNSW64')
     _,search_time_npiece_number,search_recall_npiece_number=get_report_n_piece_number('glove',25,[1,5,10],k=1000,
-                number=[10,500,1000,5000],param='HNSW64')
+                number=[10,500,1000,5000],param=param)
     
     #---------------可视化----------------
     # create_index_time可视化
-    plot_create_index_time(create_index_time, data_choice='glove', dim=25,faiss_style='HNSW64')
+    plot_create_index_time(create_index_time, data_choice='glove', dim=25,faiss_style=faiss_style)
     # report_n_piece_k可视化
-    plot_bar3d('search_time_npiece_k',search_time_npiece_k, data_choice='glove', dim=25,faiss_style='HNSW64')
-    plot_bar3d('search_recall_npiece_k',search_recall_npiece_k, data_choice='glove', dim=25,faiss_style='HNSW64')
-    plot_multiple_lines('search_time_npiece_k',search_time_npiece_k, data_choice='glove', dim=25,faiss_style='HNSW64')
-    plot_multiple_lines('search_recall_npiece_k',search_recall_npiece_k, data_choice='glove', dim=25,faiss_style='HNSW64')
+    plot_bar3d('search_time_npiece_k',search_time_npiece_k, data_choice='glove', dim=25,faiss_style=faiss_style)
+    plot_bar3d('search_recall_npiece_k',search_recall_npiece_k, data_choice='glove', dim=25,faiss_style=faiss_style)
+    plot_multiple_lines('search_time_npiece_k',search_time_npiece_k, data_choice='glove', dim=25,faiss_style=faiss_style)
+    plot_multiple_lines('search_recall_npiece_k',search_recall_npiece_k, data_choice='glove', dim=25,faiss_style=faiss_style)
     # report_number_k可视化
-    plot_bar3d('search_time_number_k',search_time_number_k, data_choice='glove', dim=25,faiss_style='HNSW64')
-    plot_bar3d('search_recall_number_k',search_recall_number_k, data_choice='glove', dim=25,faiss_style='HNSW64')
-    plot_multiple_lines('search_time_number_k',search_time_number_k, data_choice='glove', dim=25,faiss_style='HNSW64')
-    plot_multiple_lines('search_recall_number_k',search_recall_number_k, data_choice='glove', dim=25,faiss_style='HNSW64')
+    plot_bar3d('search_time_number_k',search_time_number_k, data_choice='glove', dim=25,faiss_style=faiss_style)
+    plot_bar3d('search_recall_number_k',search_recall_number_k, data_choice='glove', dim=25,faiss_style=faiss_style)
+    plot_multiple_lines('search_time_number_k',search_time_number_k, data_choice='glove', dim=25,faiss_style=faiss_style)
+    plot_multiple_lines('search_recall_number_k',search_recall_number_k, data_choice='glove', dim=25,faiss_style=faiss_style)
     # report_n_piece_number可视化
-    plot_bar3d('search_time_npiece_number',search_time_npiece_number, data_choice='glove', dim=25,faiss_style='HNSW64')
-    plot_bar3d('search_recall_npiece_number',search_recall_npiece_number, data_choice='glove', dim=25,faiss_style='HNSW64')
-    plot_multiple_lines('search_time_npiece_number',search_time_npiece_number, data_choice='glove', dim=25,faiss_style='HNSW64')
-    plot_multiple_lines('search_recall_npiece_number',search_recall_npiece_number, data_choice='glove', dim=25,faiss_style='HNSW64')
+    plot_bar3d('search_time_npiece_number',search_time_npiece_number, data_choice='glove', dim=25,faiss_style=faiss_style)
+    plot_bar3d('search_recall_npiece_number',search_recall_npiece_number, data_choice='glove', dim=25,faiss_style=faiss_style)
+    plot_multiple_lines('search_time_npiece_number',search_time_npiece_number, data_choice='glove', dim=25,faiss_style=faiss_style)
+    plot_multiple_lines('search_recall_npiece_number',search_recall_npiece_number, data_choice='glove', dim=25,faiss_style=faiss_style)
 
 
 
