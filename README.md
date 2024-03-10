@@ -11,6 +11,8 @@
 - [x] 对比不同query数量下的查询时间和召回率对比
 - [x] 对比不同分片数据库下，不同query数量下的查询时间和召回率对比
 - [ ] QPS-Recall测试
+  - [ ] HNSW的测试
+
 
 
 
@@ -56,3 +58,4 @@
 
 1. `faiss_get_report2.py`
    1. 这里相对于`faiss_get_report.py`将子图那一块修改了，直接观察子图不方便对比，这边将子图换成了在一个图中画多条折线图。`config.py`没有修改，关于多折线图依然对应`set_xlabel,set_ylabel`
+2. 由于`faiss.IndexIDMap`有一定的bug，我们不采用该方法，修改了`faiss_test.py`中的`get_search_result`函数，并添加了`get_id`函数。同时修改了`faiss_database_create.py`中的`data_piece`函数和`create_index`函数
