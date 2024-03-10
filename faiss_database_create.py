@@ -62,6 +62,10 @@ def create_index(data_choice:str='glove',n_piece:int=5,dim:int=25,param:str='HNS
         if data_choice=='glove':
             print(f'现在处理的glove数据集{data_key},需要进行归一化处理')
             faiss.normalize_L2(df)# glove数据采用的angular距离，首先需要进行归一化,然后再进行faiss.METRIC_L2
+        # 判断是否需要训练
+        if not index.is_trained: # 输出为True，代表该类index不需要训练，只需要add向量进去即可
+            index.train(df)
+            print(f"{data_key}.index 已经训练过了。")
         index.add(df)
         faiss.write_index(index, file_path)
         # # 做id的映射和自定义
