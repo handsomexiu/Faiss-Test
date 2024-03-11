@@ -9,12 +9,19 @@
 
 ## faiss（Facebook AI Similarity Search）学习和使用
 
-The Hierarchical Navigable Small World indexing method is based on a graph built on the indexed vectors. At search time, the graph is explored in a way that converges to the nearest neighbors as quickly as possible. The `IndexHNSW` uses a flat index as underlying storage to quickly access the database vectors and abstract the compression / decompression of vectors. HNSW depends on a few important parameters:
-
+Faiss-HNSW:The Hierarchical Navigable Small World indexing method is based on a graph built on the indexed vectors. At search time, the graph is explored in a way that converges to the nearest neighbors as quickly as possible. The `IndexHNSW` uses a flat index as underlying storage to quickly access the database vectors and abstract the compression / decompression of vectors. HNSW depends on a few important parameters:
 - `M` is the number of neighbors used in the graph. A larger M is more accurate but uses more memory
 - `efConstruction` is the depth of exploration at add time
 - `efSearch` is the depth of exploration of the search
 - 前两个是构造参数，构造数据集用的，后一个是搜索参数，搜索用的
+
+Faiss-IVFPOQ:是Faiss（Facebook AI Similarity Search）库中的一种索引结构，结合了Inverse File Index（IVF）和Product Quantization（PQ）的方法，用于高效进行近似最近邻搜索（ANN）任务。
+-IVF（Inverse File Index）：IVF是一种基于聚类中心的索引结构, 它将数据集划分成多个聚类, 每个聚类对应一个聚类中心。在搜索时, 首先将查询向量量化到最近的聚类中心, 然后只在该聚类中心对应的倒排列表中搜索候选向量, 这样可以显著降低搜索的复杂度。
+-PQ（Product Quantization）：PQ是一种向量量化方法， 将高维向量分成多个子空间并分别进行量化, 从而降低向量之间的比较开销，达到加速搜索的效果。
+
+IVF-Flat：是Faiss库中的一种索引结构，结合了Inverse File Index（IVF）和Flat的方法，用于高效进行近似最近邻搜索（ANN）任务。
+-IVF（Inverse File Index）：IVF是一种基于聚类中心的索引结构，通过将数据集划分为多个聚类，减小搜索空间并提高搜索效率。在搜索过程中，首先将查询向量量化到最近的聚类中心，然后只在该聚类中心对应的倒排列表中搜索候选向量，从而减少搜索复杂度。
+-Flat：Flat是一种简单直接的索引结构，用于将整个数据集直接存储在内存或磁盘中。在搜索时，需要计算查询向量与数据集中所有向量之间的相似度，然后找到最近的邻居向量。
 
 [Faiss indexes · facebookresearch/faiss Wiki (github.com)](https://github.com/facebookresearch/faiss/wiki/Faiss-indexes)
 
