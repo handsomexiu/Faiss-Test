@@ -225,10 +225,32 @@ if __name__ == "__main__":
     param:faiss中的参数，这个与创建什么类型的数据库有关
     faiss_style:str='HNSW64'和param是一样的且需要保持一致
     param:主要来创建相关类型数据库，faiss_style是用来命名文件夹的
+
+    任务描述：
+    1、这里并不是用来测量数据库不同参数下的QPS的
+    2、这里主要是用来测试不同数据库分片，query数量，k值下的查询时间和召回率
+    
+    faiss数据库类型描述：这里采用的是index_factory的要求
+    1、'HNSW64':64表示M,也就是每个节点的最大连接数
+    2、'IVF100,Flat':100表示nlist，也就是聚类中心的数量
+        faiss.index_factory(d, 'IVF100,Flat', faiss.METRIC_L2)
+        这里和quantizer = faiss.IndexFlatL2(d)，d=100
+        index_ivf_flat_1 = faiss.IndexIVFFlat(quantizer, d, nlist, faiss.METRIC_L2)等效
+    3、IVFPQ：'IVF100,PQ5'或者'IVF100,PQ5x16'，其中PQ5等价于PQ5x8：5表示M，8表示nbits
+        这个可以用index_factory的方式创建进行实验
+    4、IVFPQR：'IFV100,PQ5+5'：这里的两个5表示两次量化的量化器的数量，说明d要被5*5整除
+        这里有个问题就是无法修改nbits和nbits_refine，不像ivfpq那样又PQ8x16:16就表示nbits
+        因此关于IVFPQR这里先通过index_factory的方式简单创建进行实验
+        关于QPS采用faiss.IVFPQR()的方式创建进行实验
+    
+    index_factory是为了泛化性，但也有一些内容的缺失
     '''
     #---------------执行任务----------------
     # 首先定义采用的向量数据库的形式,在这里选择你要构造的数据库类型，参考index_factory的要求
-    faiss_style=param='HNSW64'
+    # faiss_style=param='HNSW64'
+    # faiss_style=param='IVF100,Flat'
+    # faiss_style=param='IVF100,PQ5'
+    faiss_style=param='IVF100,PQ5+5'
 
     # 创建不同分片大小的向量数据库所需要的时间对比
     create_index_time=get_report_create_index_time(data_choice='glove',dim=25,n_piece=[1,5,10,15,20,25],param=param)
