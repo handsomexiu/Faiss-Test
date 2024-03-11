@@ -58,7 +58,7 @@ def get_id(data_choice:str='glove',n_piece:int=5,dim:int=25):
 
 # 创建存储数据的文件
 def create_index_folder_choice(data_name:str,n_piece:int=5,index_style:str='HNSW',M:int=16,efConstruction:int=500)->str:#这里的n_piece需要与data_piece函数中的n_piece一致
-    folder_path = f"index_{index_style}/{data_name}_n{n_piece}_M{M}_efcon{efConstruction}"
+    folder_path = f"index_{index_style}_QPS/{data_name}_n{n_piece}_M{M}_efcon{efConstruction}"
     # 检查文件夹是否存在
     if not os.path.exists(folder_path):
         # 不存在时创建文件夹
@@ -71,7 +71,7 @@ def create_index_folder_choice(data_name:str,n_piece:int=5,index_style:str='HNSW
 # 那我们就定义几个构造的函数，不同类型的向量数据库有不同选择方式，这个通过if条件去判断就行了
 def create_index_HNSW_QPS(data_choice:str='glove',n_piece:int=5,dim:int=25,M:int=16,efConstruction:int=500):
     data_dict,data_name=data_piece(data_choice,n_piece,dim,M,efConstruction)
-    folder_path = create_index_folder_choice(data_name,n_piece,'HNSW_QPS',M,efConstruction)
+    folder_path = create_index_folder_choice(data_name,n_piece,'HNSW',M,efConstruction)
     for i in range(n_piece):
         data_key=data_name+'_M'+str(M)+'_efcon'+str(efConstruction)+'_n'+str(n_piece)+'_'+str(i+1)
         file_path = f"{folder_path}/{data_key}.index"
