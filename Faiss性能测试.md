@@ -1,27 +1,23 @@
 # 任务目标
+
 ## 初步学习
+
 - faiss向量数据库的学习和使用
 - Ann-Benchmark的学习和使用
+
 ## 中期学习
+
 设计一个合适的benchmark：包括数据/向量的分片以及合并，最后到topk的测试（k要大）
 
 # 初步学习
 
 ## faiss（Facebook AI Similarity Search）学习和使用
 
-Faiss-HNSW:The Hierarchical Navigable Small World indexing method is based on a graph built on the indexed vectors. At search time, the graph is explored in a way that converges to the nearest neighbors as quickly as possible. The `IndexHNSW` uses a flat index as underlying storage to quickly access the database vectors and abstract the compression / decompression of vectors. HNSW depends on a few important parameters:
+The Hierarchical Navigable Small World indexing method is based on a graph built on the indexed vectors. At search time, the graph is explored in a way that converges to the nearest neighbors as quickly as possible. The `IndexHNSW` uses a flat index as underlying storage to quickly access the database vectors and abstract the compression / decompression of vectors. HNSW depends on a few important parameters:
+
 - `M` is the number of neighbors used in the graph. A larger M is more accurate but uses more memory
 - `efConstruction` is the depth of exploration at add time
 - `efSearch` is the depth of exploration of the search
-- 前两个是构造参数，构造数据集用的，后一个是搜索参数，搜索用的
-
-Faiss-IVFPOQ:是Faiss（Facebook AI Similarity Search）库中的一种索引结构，结合了Inverse File Index（IVF）和Product Quantization（PQ）的方法，用于高效进行近似最近邻搜索（ANN）任务。
--IVF（Inverse File Index）：IVF是一种基于聚类中心的索引结构, 它将数据集划分成多个聚类, 每个聚类对应一个聚类中心。在搜索时, 首先将查询向量量化到最近的聚类中心, 然后只在该聚类中心对应的倒排列表中搜索候选向量, 这样可以显著降低搜索的复杂度。
--PQ（Product Quantization）：PQ是一种向量量化方法， 将高维向量分成多个子空间并分别进行量化, 从而降低向量之间的比较开销，达到加速搜索的效果。
-
-IVF-Flat：是Faiss库中的一种索引结构，结合了Inverse File Index（IVF）和Flat的方法，用于高效进行近似最近邻搜索（ANN）任务。
--IVF（Inverse File Index）：IVF是一种基于聚类中心的索引结构，通过将数据集划分为多个聚类，减小搜索空间并提高搜索效率。在搜索过程中，首先将查询向量量化到最近的聚类中心，然后只在该聚类中心对应的倒排列表中搜索候选向量，从而减少搜索复杂度。
--Flat：Flat是一种简单直接的索引结构，用于将整个数据集直接存储在内存或磁盘中。在搜索时，需要计算查询向量与数据集中所有向量之间的相似度，然后找到最近的邻居向量。
 
 [Faiss indexes · facebookresearch/faiss Wiki (github.com)](https://github.com/facebookresearch/faiss/wiki/Faiss-indexes)
 
@@ -147,7 +143,7 @@ print('index_loaded.ntotal=', index_loaded.ntotal)
     ```
 
 - **范围搜索**：方法`range_search`返回查询点周围半径内的所有向量（而不是k最近的向量）。 由于每个查询的结果列表大小不同，因此必须特别处理：在 Python 中，结果以一个一维数组 lims, D, I 的元组形式返回。 搜索 i 的结果在 `I[lims[i]:lims[i+1]], D[lims[i]:lims[i+1]]`。
-  ![](photo/8d53bb1c9c915842d3a5e20f54f72ab.png)
+  ![](E:\OBSIDIAN\OBSIDIAN notes\项目\腾讯向量数据库\photo\8d53bb1c9c915842d3a5e20f54f72ab.png)
 
   ```python
   import numpy as np
@@ -208,41 +204,10 @@ enum MetricType {
 
 
 
-----
-
-**index_factory**
-
-建议关于Faiss的所有索引的构建，**都统一使用faiss.index_factory**，基本所有的index都支持这种构建索引方法。
-
-**index_factory函数解释字符串以产生复合Faiss索引**。该字符串是一个逗号分隔的组件列表。它旨在促进索引结构的构建，特别是如果它们是嵌套的。index_factory参数通常包括预处理组件、倒排文件和编码组件。
-
-`Index_factory`是一个简化索引的方法，通过字符串来创建索引，字符串包括三部分：预处理、倒排、编码。 预处理支持：
-
-- PCA：PCA64表示通过PCA降维到64维（PCAMatrix实现）;PCAR64表示PCA后添加一个随机旋转。
-- OPQ：OPQ16表示为数据集进行16字节编码进行预处理（OPQMatrix实现），对PQ索引很有效但是训练时也会慢一些。
-
-倒排支持：
-
-- IVF：IVF4096表示使用粗量化器IndexFlatL2将数据分为4096份
-- IMI：IMI2x8表示通过Mutil-index使用2x8个bits（MultiIndexQuantizer）建立2^(2*8)份的倒排索引。
-- IDMap：如果不使用倒排但需要add_with_ids，可以通过IndexIDMap来添加id
-
-编码支持：
-
-- Flat：存储原始向量，通过IndexFlat或IndexIVFFlat实现
-- PQ：PQ16使用16个字节编码向量，通过IndexPQ或IndexIVFPQ实现
-- PQ8+16：表示通过8字节来进行PQ，16个字节对第一级别量化的误差再做PQ，通过IndexIVFPQR实现
-
-```python
-index = faiss.index_factory(d, "PCA32,IVF100,Flat")
-```
-
-表示使用PCA投影将矢量减少到32D的预处理，具体参数表示见[The index factory](https://link.zhihu.com/?target=https%3A//github.com/facebookresearch/faiss/wiki/The-index-factory).
-
 _____
 
 ==**Faiss中基础索引的介绍**==
-![](photo/Pasted%20image%2020240301104108.png)
+![](E:\OBSIDIAN\OBSIDIAN notes\项目\腾讯向量数据库\photo\Pasted image 20240301104108.png)
 Faiss中的稠密向量各种索引都是基于`Index`实现的，主要的索引方法包括：`IndexFlatL2`、`IndexFlatIP`、`IndexHNSWFlat`、`IndexIVFFlat`、`IndexLSH`、`IndexScalarQuantizer`、`IndexPQ`、`IndexIVFScalarQuantizer`、`IndexIVFPQ`、`IndexIVFPQR`等
 
 具体官方文档见：[https://github.com/facebookresearch/faiss/wiki/Faiss-indexes](https://link.zhihu.com/?target=https%3A//github.com/facebookresearch/faiss/wiki/Faiss-indexes)
@@ -351,7 +316,7 @@ Faiss中的稠密向量各种索引都是基于`Index`实现的，主要的索�
 
   - 使用情况：**内存及其稀缺，并且需要较快的检索速度，不那么在意召回率**
 
-  - 参数：PQx中的x为将向量切分的段数，因此，**x需要能被向量维度整除**，且x越大，切分越细致，时间复杂度越高。
+  - 参数：PQx中的x为将向量切分的段数，因此，**x需要能被向量维度整除**，且x越大，切分越细致，时间复杂度越高。x即为M：量化器数量
 
     - ```python
       dim, measure = 64, faiss.METRIC_L2 
@@ -361,13 +326,13 @@ Faiss中的稠密向量各种索引都是基于`Index`实现的，主要的索�
       index.train(xb)                                 
       index.add(xb) 
       ```
-    
+
   - faiss使用了PCA和PQ(Product quantization乘积量化)两种技术进行向量压缩和编码，PCA和PQ是其中最核心部分，参考：
 
     - [主成分分析（PCA）原理总结](https://link.zhihu.com/?target=https%3A//www.cnblogs.com/pinard/p/6239403.html)
     - [实例理解product quantization算法](https://link.zhihu.com/?target=http%3A//www.fabwrite.com/productquantization)
 
--  **IVFxPQy 倒排乘积量化**
+- **IVFxPQy 倒排乘积量化**
 
   - 优点：工业界大量使用此方法，各项指标都均可以接受，利用乘积量化的方法，改进了IVF的k-means，将一个向量的维度切成x段，每段分别进行k-means再检索。
 
@@ -409,7 +374,7 @@ Faiss中的稠密向量各种索引都是基于`Index`实现的，主要的索�
 
 - ### HNSWx、IndexHNSWFlat
 
-  - 这是一种基于图检索的改进方法，HNSWx中的x为构建图时每个点最多连接多少个节点，x越大，构图越复杂，查询越精确，当然构建index时间也就越慢，x取4~64中的任何一个整数。
+  - 这是一种基于图检索的改进方法，HNSWx中的x为构建图时每个点最多连接多少个节点，x越大，构图越复杂，查询越精确，当然构建index时间也就越慢，x取4~64中的任何一个整数（也就是M数量）。
 
     - ```python
       index = faiss.IndexHNSWFlat(dim, x,measure)  # measure 选为内积，x为4~64之间的整数
@@ -418,9 +383,9 @@ Faiss中的稠密向量各种索引都是基于`Index`实现的，主要的索�
   - 优点：不需要训练，基于图检索的改进方法，检索速度极快，10亿级别秒出检索结果，而且召回率几乎可以媲美Flat，能达到惊人的97%。检索的时间复杂度为loglogn，几乎可以无视候选向量的量级了。并且支持分批导入，**极其适合线上任务**，毫秒级别 RT。
 
   - 缺点：**构建索引极慢，占用内存极大**（是Faiss中最大的，大于原向量占用的内存大小）；添加数据不支持指定数据ID，**不支持从索引中删除数据**。
-  
+
     - 但是可以通过映射来构造自定义的ID,这里index和IDMap_index都存了，可能是指向同一个内存地址，除了ID不同
-  
+
       ```python
       # 在尝试一下自定义ID的index
       a=np.array([[1,2,3],[4,5,6],[7,8,9]]).astype('float32')
@@ -451,7 +416,7 @@ Faiss中的稠密向量各种索引都是基于`Index`实现的，主要的索�
       [[ 0. 27.]] [[0 1]]
       
       ```
-      
+
       ```python
       # 存储再读取也是可以的
       faiss.write_index(IDMap_index, 'IDMap_index.index')
@@ -462,11 +427,11 @@ Faiss中的稠密向量各种索引都是基于`Index`实现的，主要的索�
       # 输出
       (array([[ 0., 27.]], dtype=float32), array([[1, 2]], dtype=int64))
       ```
+
       
-      
-  
+
   - 使用情况：不在乎内存，并且有充裕的时间来构建index
-  
+
   - ```python
     dim, measure = 64, faiss.METRIC_L2   
     param =  'HNSW64' 
@@ -480,12 +445,68 @@ Faiss中的稠密向量各种索引都是基于`Index`实现的，主要的索�
     # RuntimeError: Error in unsigned __int64 __cdecl faiss::Index::remove_ids(const struct faiss::IDSelector &) at D:\a\faiss-wheels\faiss-wheels\faiss\faiss\Index.cpp:49: remove_ids not implemented for this type of index
     ```
 
+
+
+-----
+
+
+
+----
+
+**index_factory**
+
+建议关于Faiss的所有索引的构建，**都统一使用faiss.index_factory**，基本所有的index都支持这种构建索引方法。
+
+**index_factory函数解释字符串以产生复合Faiss索引**。该字符串是一个逗号分隔的组件列表。它旨在促进索引结构的构建，特别是如果它们是嵌套的。index_factory参数通常包括预处理组件、倒排文件和编码组件。
+
+`Index_factory`是一个简化索引的方法，通过字符串来创建索引，字符串包括三部分：预处理、倒排、编码。 预处理支持：
+
+- PCA：PCA64表示通过PCA降维到64维（PCAMatrix实现）;PCAR64表示PCA后添加一个随机旋转。
+- OPQ：~~OPQ16表示为数据集进行16字节编码进行预处理（OPQMatrix实现），对PQ索引很有效但是训练时也会慢一些。~~
+
+倒排支持：
+
+- IVF：IVF4096表示使用粗量化器IndexFlatL2将数据分为4096份
+- IMI：IMI2x8表示通过Mutil-index使用2x8个bits（MultiIndexQuantizer）建立2^(2*8)份的倒排索引。
+- IDMap：如果不使用倒排但需要add_with_ids，可以通过IndexIDMap来添加id
+
+编码支持：
+
+- Flat：存储原始向量，通过IndexFlat或IndexIVFFlat实现
+- PQ：PQ16使用16个字节编码向量，通过IndexPQ或IndexIVFPQ实现
+- PQ8+16：表示通过8字节来进行PQ，16个字节对第一级别量化的误差再做PQ，通过IndexIVFPQR实现
+
+PQ16表示M=16，即采用了16个量化器，默认的nbits=8
+
+**上述的方法没问题，因为PQ16对应的code size=16，因为默认的nbits=8，恰好是一个字节（byte），分片成16个，就相当于16byte（每个分片都用一个字节来表示）**。PQ16x12：16*12/8：24个字节
+
+[介绍3种好用的Faiss复合索引组合：IVF+ADC、Multi-D-ADC、IVF+HNSW - 知乎 (zhihu.com)](https://zhuanlan.zhihu.com/p/654522452)
+
+```python
+index = faiss.index_factory(d, "IVF256,PQ32x8")
+index.train(xb)
+index.add(xb)
+D, I = index.search(xq, k)
+recall(I)
+
+'''
+以上代码创建了一个包含256个IVF分区的IVFADC索引，
+
+每个向量分别使用 m=32的PQ 压缩算法（m指的是PQ算法将一个向量分割成m段）。PQ 默认使用8bits精度，因此精度信息也可以省略不写，只写 “IVF256，PQ32”。
+'''
+```
+
+[向量检索工具faiss使用教程-进阶篇 - 知乎 (zhihu.com)](https://zhuanlan.zhihu.com/p/644077057)
+
+表示使用PCA投影将矢量减少到32D的预处理，具体参数表示见[The index factory](https://link.zhihu.com/?target=https%3A//github.com/facebookresearch/faiss/wiki/The-index-factory).
+
 ---
 
 **别人的一些个经验**
-1. ![](photo/Pasted%20image%2020240301113212.png)
 
-2. ![](photo/Pasted%20image%2020240301113218.png)
+1. ![](E:\OBSIDIAN\OBSIDIAN notes\项目\腾讯向量数据库\photo\Pasted image 20240301113212.png)
+
+2. ![](E:\OBSIDIAN\OBSIDIAN notes\项目\腾讯向量数据库\photo\Pasted image 20240301113218.png)
 
 3. **Faiss可以组合传参**
 
@@ -591,16 +612,15 @@ Faiss中的稠密向量各种索引都是基于`Index`实现的，主要的索�
 
 ## **ann-benchmark**
 
-![](photo/Pasted%20image%2020240302103700.png)
+![](E:\OBSIDIAN\OBSIDIAN notes\项目\腾讯向量数据库\photo\Pasted image 20240302103700.png)
 
 - 一旦框架知道应该运行哪些实例，就会进入实验循环，如图 2 所示。循环包括两个阶段。在预处理阶段，算法实例会为数据集 X 建立一个索引数据结构。然后，循环进入查询阶段，查询点会一个接一个地发送给算法实例。对于每个查询点，实例（最多）返回 k 个数据点；在回答查询后，实例还可以报告它可能掌握的任何额外信息，如考虑的候选点数量，即计算出的精确距离数量。然后，用一组新的查询参数重新配置实例，并重复运行查询集，直到不再有这些参数集为止。
 - 每个算法实例都在一个独立的 Docker 容器中运行。这使得每次运行后的清理工作非常简单：只需终止容器就能搞定一切。将实验移出主进程还为我们提供了一种简单且与实现无关的方法来计算实现的内存使用情况：子进程记录初始化算法实例数据结构之前和之后的总内存消耗，并比较这两个值。
 - 通过将 文件系统的一部分挂载到 Docker 容器中，每次运行的完整结果都会写入主机。主进程会对容器执行阻塞式定时等待，如果超过用户可控制的超时时间，主进程就会终止容器。
 - 数据集大小。目前，ANN-Benchmarks 支持对内存中的近邻算法进行基准测试。特别是，ANN-Benchmarks 在运行实验时会将数据集保存在内存中。在选择纳入框架的数据集时，必须考虑到这一点。在实践中，这意味着该框架可以处理维度从数百万点到数千维度的数据集。
 
-自己也设计了一个简要的流程：
+自己也设![benchmark-设计1.drawio](E:\OBSIDIAN\OBSIDIAN notes\项目\腾讯向量数据库\photo\benchmark-设计1.drawio.png)计了一个简要的流程：
 
-![benchmark-设计1.drawio](photo\benchmark-设计1.drawio.png)
 
 - 这里也是想像ann-benchmark一样想可以通过参数进行多组实验
 
@@ -644,6 +664,7 @@ print(len(hdf['test']))#10000
 ```
 
 - 对于glove，hdf5中的是四个组['distances', 'neighbors', 'test', 'train']
+
   - train：就是用来存储和构造数据结构的数据
   - test：是用来查询的
   - distances和neighbors每个元素的长度都是100
@@ -670,12 +691,12 @@ print(len(hdf['test']))#10000
 角距离（angular distance），等效于归一化到单位球面上之后的欧拉距离。
 
 -  Note that the angular distance can be expressed via the Euclidean distance between normalized vectors, so our results apply to the angular distance as well
-  - 角距离可以表示成归一化向量的
-- Euclidean distance on a sphere corresponds to the angular distance or cosine similarity
-  - 这里应该是指有关联，余弦相似度和欧氏距离（同角距离）的方向都不一样
-    - cosine是越大越相似
-    - 欧氏距离和角距离是越小越相似
-- [[1509.02897\] Practical and Optimal LSH for Angular Distance (arxiv.org)](https://arxiv.org/abs/1509.02897)
+   - 角距离可以表示成归一化向量的
+-  Euclidean distance on a sphere corresponds to the angular distance or cosine similarity
+   - 这里应该是指有关联，余弦相似度和欧氏距离（同角距离）的方向都不一样
+     - cosine是越大越相似
+     - 欧氏距离和角距离是越小越相似
+-  [[1509.02897\] Practical and Optimal LSH for Angular Distance (arxiv.org)](https://arxiv.org/abs/1509.02897)
 
 -----
 
@@ -727,67 +748,338 @@ print(len(hdf['test']))
 
 
 
-
-
-
-
-
-
-
-
 ~~HNSW无法指定索引进行存储，是不是还得做一层索引的映射~~（可以通过映射）
 
-
-
-
+------
 
 ## HNWS 不同参数测试
 
-The Hierarchical Navigable Small World indexing method is based on a graph built on the indexed vectors. At search time, the graph is explored in a way that converges to the nearest neighbors as quickly as possible. The `IndexHNSW` uses a flat index as underlying storage to quickly access the database vectors and abstract the compression / decompression of vectors. HNSW depends on a few important parameters:
+有一点需要注意的是，我们由于有分片操作因此我们在创建数据集的时候采用了IDMap_index方法
 
-- `M` is the number of neighbors used in the graph. A larger M is more accurate but uses more memory
-- `efConstruction` is the depth of exploration at add time
-- `efSearch` is the depth of exploration of the search
-- 前两个是构造参数，构造数据集用的，后一个是搜索参数，搜索用的
-- 实验过程中我们可以通过固定M和efConstruction，通过改变efSearch来控制召回率。这里也同时固定topk
+- 我们首先创建了 HNSW 索引，并将其包装在 `IndexIDMap` 中。然后，我们读取了保存的 `IndexIDMap`，获取了内部的 HNSW 索引对象 `hnsw_index_internal`，最后使用 `downcast_index` 将其向下转换为 HNSW 类型。最终，我们可以在 `hnsw_index_downcasted` 上设置 `efSearch` 参数和执行其他 HNSW 特有的操作。
+
+- ```python
+  import faiss
+  import numpy as np
+  
+  # 生成一些随机数据进行演示
+  np.random.seed(42)
+  data = np.random.rand(10000, 64).astype('float32')  # 100个维度为64的随机向量
+  # 设置 HNSW 构建参数
+  M = 16
+  efConstruction = 40
+  # 创建 HNSWFlat 索引
+  index_factory_str = f"HNSW{M}"  # 设置 HNSW 参数，HNSW64 就是 M=64
+  hnsw_index = faiss.index_factory(64, index_factory_str)
+  hnsw_index.hnsw.efConstruction = efConstruction
+  # 将数据添加到索引
+  xids = np.arange(len(data))
+  IDMap_index = faiss.IndexIDMap(hnsw_index)
+  IDMap_index.add_with_ids(data, xids)
+  # 将 IndexIDMap 保存到文件
+  faiss.write_index(IDMap_index, "IDMap_index2.index")
+  
+  # 读取 IndexIDMap
+  index = faiss.read_index("IDMap_index2.index")
+  # 从 IndexIDMap 中获取 HNSW 索引对象
+  hnsw_index_internal = index.index
+  # 使用 downcast_index 将 HNSW 索引向下转换为 faiss.Index 类型
+  hnsw_index_downcasted = faiss.downcast_index(hnsw_index_internal)
+  # 设置 efSearch 参数
+  efSearch = 2
+  hnsw_index_downcasted.hnsw.efSearch = efSearch
+  # 现在你可以使用 hnsw_index_downcasted 来执行搜索等操作
+  
+  ```
+
+- 下面有两种错误使用
+
+  - ```python
+    # 没有使用downcast_index
+    index = faiss.read_index("IDMap_index2.index")
+    index.hnsw.efSearch = efSearch
+    # 报错：AttributeError: 'IndexIDMap' object has no attribute 'hnsw'
+    ```
+
+  - ```python
+    # 没有使用downcast_index
+    index = faiss.read_index("IDMap_index2.index")
+    index.hnsw.efSearch = efSearch
+    np.random.seed(42)
+    query_vector = np.random.rand(1, 64).astype('float32')  # 随机查询向量
+    k = 5  # 要检索的最近邻居数量
+    
+    distances, indices = index.search(query_vector, k)
+    
+    # 输出搜索结果
+    print("查询向量:", query_vector)
+    print("最近邻居的索引:", indices)
+    print("最近邻居的距离:", distances)
+    ```
+
+    - 虽说没有报错，但是通过改变efSearch数值并没有对检索造成任何的影响，因此这个方法也行不通
+
+- 但是发现了一个更严重的问题：如果这样down一下了，那么索引的目的就失效了。
+
+- 只能通过`xids[I]来获取对应的索引`，我们不使用
+
+  - 如果这样的话需要修改：
+
+    - `data_piece`函数：其中是将里面的`id_dict`提取的方法转到`get_search_result`中去
+
+      - 其实我们可以创建一个新的函数来获取id,`get_id`
+
+        ```python
+        def get_id(data_choice:str='glove',n_piece:int=5,dim:int=25):
+            data_name= data_info[data_choice][dim]
+            glove_file_path = f"data/{data_name}.hdf5"# 数据地址，hdf5格式
+            glove_hdf = h5py.File(glove_file_path, "r")# 读取数据
+            length_all = len(glove_hdf['train'])# 获取数据的总长度  
+            cut_point=int(length_all/n_piece)# 获取切分点,int是向下取整
+            id_dict={}# 这里用字典来存取每一段对应的索引
+            for i in range(n_piece):
+                keys='npiece_'+str(i+1)
+                if i+1 == n_piece:
+                    id=list(range(i*cut_point,length_all))
+                    id=np.array(id)
+                    id_dict[keys]=id
+                else:
+                    id=list(range(i*cut_point,(i+1)*cut_point))
+                    id=np.array(id)
+                    id_dict[keys]=id
+            return id_dict
+            
+        ```
+
+    - `create_index_HNSW_QPS`函数：直接采用`index_factory`的方式，不采用`IndexIDMap`这种方式
+
+    - `get_search_result_HNSW_QPS`函数：我们第一步获取id之后需要还需要进一步来获取对应分片下正确的id
+
+      - ```python
+        def get_search_result_HNSW_QPS(data_choice:str='glove',n_piece:int=5,dim:int=25,efsearch:=10,k:int=10,number:int=100):# number是指定测试集的数量,要和get_test_data函数中的number一致
+            # data_dict,data_name=data_piece(data_choice,n_piece,dim)
+            data_name= data_info[data_choice][dim] 
+            folder_path = create_index_folder_choice(data_name,n_piece,'HNSW_QPS')
+            golve_test,_,_=get_test_data_QPS(data_choice,dim,number)# 这是一个双层数组，因为有这么多测试数据集
+            # 测试数据提取
+            search_id=[]
+            search_distance=[]
+            #------------------------------------
+            id_dict=get_id(data_choice,n_piece,dim)
+            #-------------------------------------
+            for i in range(n_piece):
+                data_key=data_name+'_n'+str(n_piece)+'_'+str(i+1)
+                keys='npiece_'+str(i+1)
+                print(f'正在处理数据集{data_key}')
+                file_path = f"{folder_path}/{data_key}.index"
+                index = faiss.read_index(file_path)
+                # 设置搜索参数
+                index.hnsw.efSearch = efsearch
+                sd,sid=index.search(golve_test, k)
+                #-------------------------------------
+                id_real=id_dict[keys][sid]
+                search_id.append(id_real)
+                #-------------------------------------
+                search_distance.append(sd)
+            search_id=np.array(search_id)
+            search_distance=np.array(search_distance)
+        ```
+
+      - 这里同时还将`efsearch:=10`引入到`get_search_result_HNSW_QPS`中
+
+        - 因此这里还需要修改`get_recall中的相关参数`
+
+- 同时除了在QPS计算这里修改，我们还将原先的代码进行修改，不需要映射了
+
+-----------
+
+
+
+# IVFflat
+
+
 
 ```python
-import numpy as np
-import faiss
+# 方法1
+quantizer = faiss.IndexFlatL2(d)
+index_ivf_flat_1 = faiss.IndexIVFFlat(quantizer, d, nlist, faiss.METRIC_L2)
+index_ivf_flat_1.train(data)
+index_ivf_flat_1.add(data)
 
-# 生成一些随机数据进行演示
-np.random.seed(42)
-data = np.random.rand(100, 64).astype('float32')  # 100个维度为64的随机向量
-
-# 设置 HNSW 参数
-M = 16
-efConstruction = 40
-efSearch = 20
-
-# 创建 HNSWFlat 索引
-index_factory_str = f"HNSW{M}"  # 设置 HNSW 参数,HNSW64就是M=64
-index = faiss.index_factory(64, index_factory_str)
-index.hnsw.efConstruction = efConstruction
-index.hnsw.efSearch = efSearch
-
-# 将数据添加到索引
-index.add(data)
-
-# 对查询向量进行最近邻搜索
-query_vector = np.random.rand(1, 64).astype('float32')  # 随机查询向量
-k = 5  # 要检索的最近邻居数量
-
-distances, indices = index.search(query_vector, k)
-
-# 输出搜索结果
-print("查询向量:", query_vector)
-print("最近邻居的索引:", indices)
-print("最近邻居的距离:", distances)
-
-
+# 方法2
+description = 'IVF4096,Flat'
+index_ivf_flat_2 = faiss.index_factory(d, description, faiss.METRIC_L2)
+index_ivf_flat_2.train(data)
+index_ivf_flat_2.add(data)
 ```
 
+- 这两种方法是等效的，证明方法如下（chatgpt给的方法）
+
+  - ```python
+    import faiss
+    import numpy as np
+    # 数据和参数
+    np.random.seed(42)
+    d = 64  # 向量维度
+    nlist = 4096  # 聚类数量
+    n_samples = 10000  # 样本数量
+    query_vector = np.random.rand(1, d).astype(np.float32)  # 查询向量
+    # 生成随机数据
+    data = np.random.rand(n_samples, d).astype(np.float32)
+    # 方法1
+    quantizer = faiss.IndexFlatL2(d)
+    index_ivf_flat_1 = faiss.IndexIVFFlat(quantizer, d, nlist, faiss.METRIC_L2)
+    index_ivf_flat_1.train(data)
+    index_ivf_flat_1.add(data)
+    # 方法2
+    description = 'IVF4096,Flat'
+    index_ivf_flat_2 = faiss.index_factory(d, description, faiss.METRIC_L2)
+    index_ivf_flat_2.train(data)
+    index_ivf_flat_2.add(data)
+    # 查询
+    k = 5
+    D1, I1 = index_ivf_flat_1.search(query_vector, k)
+    D2, I2 = index_ivf_flat_2.search(query_vector, k)
+    # 验证结果是否一致
+    result_equal = np.array_equal(I1, I2)
+    result_equal2 = np.array_equal(D1, D2)
+    print("Are the results equal?", result_equal,result_equal2)
+    # 这两种方法等效
+    #Are the results equal? True True
+    # chatgpt给的答案
+    ```
+
+    
+
+- Index_factory
+
+  - | String  | Quantizer class                | Number of centroids | Comments                                                     |
+    | ------- | ------------------------------ | ------------------- | ------------------------------------------------------------ |
+    | IVF4096 | `IndexFlatL2` or `IndexFlatIP` | 4096                | Constructs one of the IndexIVF variants, with a flat quantizer. |
+
+    - 4096表示聚类中心的数量，自己带有一个flat量化器
+
+- IndexIVFFLat
+
+  - | Inverted file with exact post-verification | `IndexIVFFlat` | `"IVFx,Flat"` | `quantizer`, `d`, `nlists`, `metric` | `4*d  + 8` | no   | Takes another index to assign vectors to inverted lists. The 8 additional bytes are the vector id that needs to be stored. |
+    | ------------------------------------------ | -------------- | ------------- | ------------------------------------ | ---------- | ---- | ------------------------------------------------------------ |
+
+- 查询参数：**nprobe**
+
+  - At query time, a set of `nprobe` inverted lists is selected
+  - The `nprobe` is specified at query time (useful for measuring trade-offs between speed and accuracy).
+  - `nprobe`: 在多少个聚类中进行搜索，默认为`1`,`nprobe`越大，结果越精确，但是速度越慢
 
 
 
+-----
 
+# IVFPQR
+
+| Product quantizer (PQ) in flat mode                      | `IndexPQ`     | `"PQx"`, `"PQ"M"x"nbits` | `d`, `M`, `nbits`                                            | `ceil(M * nbits / 8)` | yes  |      |
+| -------------------------------------------------------- | ------------- | ------------------------ | ------------------------------------------------------------ | --------------------- | ---- | ---- |
+| IVFADC (coarse quantizer+PQ on residuals)                | `IndexIVFPQ`  | `"IVFx,PQ"y"x"nbits`     | `quantizer`, `d`, `nlists`, `M`, `nbits`                     | `ceil(M * nbits/8)+8` | no   |      |
+| IVFADC+R (same as IVFADC with re-ranking based on codes) | `IndexIVFPQR` | `"IVFx,PQy+z"`           | `quantizer`, `d`, `nlists`, `M`, `nbits`, `M_refine`, `nbits_refine` | `M+M_refine+8`        | no   |      |
+
+- The number of bits `n_bits` must be equal to 8, 12 or 16
+
+
+
+[Faiss indexes · facebookresearch/faiss Wiki (github.com)](https://github.com/facebookresearch/faiss/wiki/Faiss-indexes)
+
+[Faiss Indexs 的进一步了解 (waltyou.github.io)](https://waltyou.github.io/Faiss-Indexs/)
+
+[Faiss indexes (composite) · facebookresearch/faiss Wiki (github.com)](https://github.com/facebookresearch/faiss/wiki/Faiss-indexes-(composite))
+
+[Struct faiss::IndexIVFPQR — Faiss documentation](https://faiss.ai/cpp_api/struct/structfaiss_1_1IndexIVFPQR.html)
+
+==**IVFPQR**==	
+
+- PQ8+16：表示通过8字节来进行PQ，16个字节对第一级别量化的误差再做PQ，通过IndexIVFPQR实现
+  - 这里见本笔记的index_factory那一块
+
+
+```python
+index = faiss.index_factory(d, "PCA32,IVF100,Flat")
+```
+
+看了下面的PQ和IVFPQ可以发现一个有意思的事情
+
+- `M_refine`, `nbits_refine`是进一步量化的参数，这里的d不仅能够整除m，还需要整除m_refine，
+
+- ~~`PQy+z`中的x和y分别对应：`nbits`,`nbits_refine`：refine：精细化~~
+
+- `PQy+z`中的x和y分别对应：`M`,`M_refine`：refine：精细化
+
+- 这里的查询参数因该也是`nprobe`，这里参考的是
+
+  - ```python
+    coarse_quantizer = faiss.IndexFlatL2 (d)
+    index = faiss.IndexIVFPQ (coarse_quantizer, d,
+                              ncentroids, code_size, 8)
+    index.nprobe = 5
+    ```
+
+    See the chapter about `IndexIVFFlat` for the setting of `ncentroids`. The `code_size` is typically a power of two between 4 and
+
+----
+
+先看一下PQ吧
+
+```python
+m = 16                                   # number of subquantizers
+n_bits = 8                               # bits allocated per subquantizer
+pq = faiss.IndexPQ (d, m, n_bits)        # Create the index
+pq.train (x_train)                       # Training
+pq.add (x_base)                          # Populate the index
+D, I = pq.search (x_query, k)            # Perform a search
+```
+
+| PQ16, PQ16x12 | `IndexPQ`, `IndexIVFPQ` | 16, ceil(16 * 12 / 8) | Uses Product Quantization codes with 16 codes of 12 bits each. When the number of bits is omitted, it is set to 8. With suffix "np" does not train the Polysemous permutation, which can be slow. |
+| ------------- | ----------------------- | --------------------- | ------------------------------------------------------------ |
+
+1. **"16" 表示码本数量（Number of codes）：** 这是 Product Quantization（PQ）中使用的码本（codebook）的数量。在 PQ 中，原始向量被划分为多个子空间（也称为子量化器），每个子空间都有一个独立的码本。在这个上下文中，"16" 表示有16个码本，因此原始向量会被量化成16个子空间中的码字。这些码本共同形成 Product Quantization 的结构。（这里指的是$PQ 16\times 12$这个，不是PQ16（这里的16就是nbits了））
+2. **"12" 表示每个码本的比特数（Number of bits per codebook）：** 这是指每个子空间（码本）中用于表示一个原始向量的码字的比特数。在这个例子中，"12" 表示每个码本使用12个比特。每个比特可以看作是一个二进制位，因此每个码本可以表示 212=4096212=4096 种不同的离散值
+
+- `m = 16`：指定了 PQ 编码的子量化器数量。
+  - **维度 d 的限制**：另外，维度 `d` 必须是子量化器数量 `m` 的倍数。这是因为 PQ 编码将向量划分为多个子向量，每个子向量由一个子量化器负责。所以 `d` 必须被 `m` 整除。
+- `n_bits = 8`：指定了每个子量化器的比特数
+  - **n_bits 限制**：对于 `IndexPQ`，参数 `n_bits` 指定了每个子量化器的比特数。然而，这个值必须等于 8、12 或 16。所以在你的代码中，`n_bits = 8` 是符合 Faiss 对 `IndexPQ` 的要求的。
+  - 这个比特数我觉得更像是聚类的一种，`n_bits = 8` ,$2^8$
+    - 以Kmeans算法为例， 假设数据集一个包含N个元素， 每个元素是一个D维向量， 使用Kmeans方法进行聚类，最终产生K个聚类中心， 比如K=256， 此时需要8bit表示， 0-255 每个cluster_id， 每个元素使用8bit表示 记录了该元素所属的cluster_id, 然后通过cluster_id 查到 中心的向量， 用中心向量近作为该元素的近似表示。
+
+**==Product Quantization==**
+[ANN 之 Product Quantization - 知乎 (zhihu.com)](https://zhuanlan.zhihu.com/p/140548922)
+
+- PQ算法把D维向量分成m组， 每组进行Kmeans聚类算法  
+  - 带来的好处， 1) m组子向量的Kmeans算法可以并行求解 2) 表示空间增大， K的m次方
+  - ![](E:\OBSIDIAN\OBSIDIAN notes\项目\腾讯向量数据库\photo\Pasted image 20240311084519.png)
+  - ADC和SDC：
+    - [ANN简单讲解3-PQ距离计算-ADC与SDC - 知乎 (zhihu.com)](https://zhuanlan.zhihu.com/p/430227688)
+
+**==IVFPQ==**
+[ANN 之 Product Quantization - 知乎 (zhihu.com)](https://zhuanlan.zhihu.com/p/140548922)
+[ANN召回算法之IVFPQ - 知乎 (zhihu.com)](https://zhuanlan.zhihu.com/p/378725270)
+
+- 找query的topk最近邻， 不用对整个数据集N做计算， 只需要对“有潜力”的候选进行计算， 可以通过聚类的方式， 先找到top的cluster， 然后对cluster内的数据点一次计算距离
+  - coarse quantizer，粗粒度量化器，在原始的向量空间中，基于kmeans聚类出k'个簇cluster, k'的大小一般为sqrt(n),
+  - 实用PQ对cluster内的数据点进行量化，PQ并不是直接在原始数据上做，而是经过第1层量化后，计算出每个数据与其量化中心的残差后，对这个残差数据集进行PQ量化。用PQ处理残差，而不是原始数据的原因是残差的方差或者能量比原始数据的方差或者能量要小
+  - ![](E:\OBSIDIAN\OBSIDIAN notes\项目\腾讯向量数据库\photo\Pasted image 20240311085011.png)
+  - query查询topk近邻时， 选定的粗聚类中心不一定是1个， 可以是多个， 比如k'', 朴素的ADC算法的复杂度是O(n×m)，而IVFADC算法的复杂度会降低为O((N×k''/k')×m)。
+
+
+
+**奇怪的地方：**
+
+- ```python
+  d=64
+  m = 16                                   # number of subquantizers
+  n_bits = 9                            # bits allocated per subquantizer
+  pq = faiss.IndexPQ (d, m, n_bits)        # Create the inde
+  ```
+
+  - 这里不止能用8，12，16。其余数字也都可以使用
+
+- IVFPQ不同nbits创建数据库的时间变化巨大
+
+  - ![ivfpq_nbits_测试时间对比](photo/ivfpq_nbits_测试时间对比.png)
