@@ -6,14 +6,16 @@
 
 - [x] 支持HNSW64,其余的还没测试
 - [ ] 支持创建faiss数据库的不同参数测试
+  - 个人感觉index_factory有些参数体现不全
 - [x] 创建不同分片向量数据库的时间对比
 - [x] 不同切片数据库在不同k（top k）值下的查询时间和召回率对比
 - [x] 对比不同query数量下的查询时间和召回率对比
 - [x] 对比不同分片数据库下，不同query数量下的查询时间和召回率对比
-- [ ] QPS-Recall测试
-  - [x] HNSW的测试
-  - [ ] IVFPQR
-  - [ ] IVF-Flat
+- [x] QPS-Recall测试
+  - [x] HNSW
+  - [x] IVFPQ
+  - [x] IVFPQR
+  - [x] IVF-Flat
 
 
 
