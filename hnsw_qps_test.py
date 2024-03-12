@@ -104,7 +104,7 @@ def combine_list(data: list, ids: list, k: int = 10):
 def get_search_result_HNSW_QPS(data_choice:str='glove',n_piece:int=5,dim:int=25,M:int=16,efConstruction:int=500,efsearch:int=10,k:int=10,number:int=100):# number是指定测试集的数量,要和get_test_data函数中的number一致
     # data_dict,data_name=data_piece(data_choice,n_piece,dim)
     data_name= data_info[data_choice][dim] 
-    folder_path = create_index_folder_choice(data_name,n_piece,'HNSW_QPS',M,efConstruction)
+    folder_path = create_index_folder_choice(data_name,n_piece,'HNSW',M,efConstruction)
     golve_test,_,_=get_test_data_QPS(data_choice,dim,number)# 这是一个双层数组，因为有这么多测试数据集
     # 测试数据提取
     search_id=[]
