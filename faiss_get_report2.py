@@ -238,7 +238,7 @@ if __name__ == "__main__":
         index_ivf_flat_1 = faiss.IndexIVFFlat(quantizer, d, nlist, faiss.METRIC_L2)等效
     3、IVFPQ：'IVF100,PQ5'或者'IVF100,PQ5x16'，其中PQ5等价于PQ5x8：5表示M，8表示nbits
         这个可以用index_factory的方式创建进行实验
-    4、IVFPQR：'IFV100,PQ5+5'：这里的两个5表示两次量化的量化器的数量，说明d要被5*5整除
+    4、IVFPQR：'IFV100,PQ5+5'：这里的两个5表示两次量化的量化器的数量，说明d要整除5。如果是PQ4+5，则d需要整除5和4
         这里有个问题就是无法修改nbits和nbits_refine，不像ivfpq那样又PQ8x16:16就表示nbits
         因此关于IVFPQR这里先通过index_factory的方式简单创建进行实验
         关于QPS采用faiss.IVFPQR()的方式创建进行实验
