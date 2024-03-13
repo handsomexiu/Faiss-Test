@@ -6,6 +6,7 @@ import os
 import time
 from config import *
 import matplotlib.pyplot as plt
+import seaborn as sns
 
 # 单个数据处理
 def get_test_data_QPS(data_choice:str='glove',dim:int=25,number:int=100):#这里定义一个number是为了选取测试集数量，默认是100个
@@ -225,13 +226,16 @@ def plot_multiple_lines_qps( data_dict: dict, data_choice: str = 'glove', dim: i
     num_lines = len(data_dict)
     # 创建图表对象
     plt.figure(figsize=(8, 5))
+    # 使用seaborn颜色板
+    colors = sns.color_palette("husl", num_lines)
     # 遍历每条折线图
     for i, (key, inner_dict) in enumerate(data_dict.items()):
         # 提取数据
         x_values = inner_dict['recall']
         y_values = inner_dict['qps']
         # 选择不同颜色，可以根据需要修改颜色
-        line_color = plt.cm.viridis(i / num_lines)
+        # line_color = plt.cm.viridis(i / num_lines)
+        line_color = colors[i]
         # 在同一个图中绘制多条折线图，并设置标签位置在图外
         sub_label=key
         plt.plot(x_values, y_values, marker='o', label=sub_label, color=line_color)
@@ -265,10 +269,10 @@ if __name__ == "__main__":
     如果命名不规范可能会导致查询不到对应的数据而报错
     '''
     # 创建多组实验所采用的数据集
-    # get_multiple_data(data_choice='glove',dim=25,n_piece=[5],M=[16,32],efConstruction=[100,500])
+    # get_multiple_data(data_choice='glove',dim=25,n_piece=[5,10],M=[4,16,32],efConstruction=[100,300,500])
 
     # 进行多组实验：输出一个双层字典，key是data_key，value是对应的recall和qps字典
-    result_dict=get_multiple_QPS(data_choice='glove',dim=25,n_piece=[5],M=[16,32],efConstruction=[100,500])
+    result_dict=get_multiple_QPS(data_choice='glove',dim=25,n_piece=[5,10],M=[4,16,32],efConstruction=[100,300,500])
 
     # 可视化
     plot_multiple_lines_qps(result_dict, data_choice='glove', dim=25,faiss_style='HNSW')
