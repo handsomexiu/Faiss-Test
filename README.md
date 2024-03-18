@@ -234,6 +234,32 @@
 
 4. 数据文件命名规范同上
 
+
+
+# get_data_expand
+
+该文件夹是用来创建扩展数据集的
+
+扩展数据集：
+
+- 原始数据集中的`ground_truth`数量是100
+- 现在扩展数据集中的`ground_truth`数量是100000，实验时想取多少数据就将k设置为多少即可（在hnsw的qps测试中，topk和所采用的ground_truth数量都是相同的，都用参数k来进行管理）
+
+直接运行`python create_data.py`，这里将会创建一个新的文件夹`data_expand`用来存储数据，数据的命名格式为`glove-25-angular-{count}.hdf:glove-25-angular-100000.hdf`其中100000表示每个测试用例存储的ground_truth的数量。
+
+```python
+if __name__ == "__main__":
+    # 首先读取原始数据，这一部风数据是已经下载好的，放在data文件夹中
+    filename='../data/glove-25-angular.hdf5'
+    #要存储的ground_truth的数量
+    count=100000
+    # 这一部分扩展数据存放的地址
+    out_put_fn = f'../data_expand/glove-25-angular-{count}.hdf5'
+    get_data(filename, out_put_fn, 'angular', 'float', count)
+```
+
+
+
 # 文件修改说明
 
 1. `faiss_get_report2.py`
