@@ -109,7 +109,7 @@ def get_search_result_HNSW_QPS(data_choice:str='glove',n_piece:int=5,dim:int=25,
     # data_dict,data_name=data_piece(data_choice,n_piece,dim)
     data_name= data_expand_info[data_choice][dim] 
     folder_path = create_index_folder_choice(data_name,n_piece,'HNSW',M,efConstruction)
-    golve_test,_,_=get_test_data_QPS(data_choice,dim,number,k)# 这是一个双层数组，因为有这么多测试数据集
+    golve_test,_,_= get_test_data_QPS(data_choice,dim,number,k)# 这是一个双层数组，因为有这么多测试数据集
     # 测试数据提取
     search_id=[]
     search_distance=[]
@@ -180,9 +180,9 @@ def get_multiple_data(data_choice:str='glove',dim:int=25,n_piece:list=[5],M:list
     efConstruction=efConstruction
     for i in npiece:
         for j in M:
-            for k in efConstruction:
-                print(i,j,k)
-                create_index_HNSW_QPS(data_choice,n_piece=i,dim=dim,M=j,efConstruction=k)
+            for e in efConstruction:
+                print(i,j,e)
+                create_index_HNSW_QPS(data_choice,n_piece=i,dim=dim,M=j,efConstruction=e)
 
 # 进行多组实验：输出一个字典，key是data_key，value是对应的recall和qps
 def get_multiple_QPS(data_choice:str='glove',dim:int=25,n_piece:list=[5],M:list=[16,64],efConstruction:list=[100,500],efsearch:list=[1,3,5,7,10,15,20,30,40,60,80,100,500],k:int=10,number:int=1000):
@@ -200,6 +200,7 @@ def get_multiple_QPS(data_choice:str='glove',dim:int=25,n_piece:list=[5],M:list=
                 qps=[]
                 recall=[]
                 for l in efsearch:
+                    print(i,j,e,l)
                     mean_reacall,qps_=get_QPS(data_choice,n_piece=i,dim=dim,M=j,efConstruction=e,efsearch=l,k=k,number=number)
                     qps.append(qps_)
                     recall.append(mean_reacall)
@@ -221,11 +222,11 @@ def create_photo_store_qps(data_choice:str='glove',dim:int=25,faiss_style:str='H
         print(f"文件夹 '{folder_path}' 已经存在。")
     return folder_path
 
-def plot_multiple_lines_qps( data_dict: dict, data_choice: str = 'glove', dim: int = 25,faiss_style:str='HNSW'):
+def plot_multiple_lines_qps( data_dict: dict, data_choice: str = 'glove', dim: int = 25,faiss_style:str='HNSW',k:int=10):
     # 创建文件夹并确定文件路径
     data_name= data_expand_info[data_choice][dim] 
     folder_path = create_photo_store_qps(data_choice, dim,faiss_style)
-    file_path = f"{folder_path}/{faiss_style}_multiple_lines.png"
+    file_path = f"{folder_path}/{faiss_style}_k{k}_multiple_lines.png"
     num_lines = len(data_dict)
     # 创建图表对象
     plt.figure(figsize=(8, 5))
@@ -246,7 +247,7 @@ def plot_multiple_lines_qps( data_dict: dict, data_choice: str = 'glove', dim: i
     set_xlabel, set_ylabel = 'Recall', 'query per second(1/s)'
     plt.xlabel(set_xlabel)
     plt.ylabel(set_ylabel)
-    plt_title=data_name+'-'+faiss_style+'-QPS'
+    plt_title=data_name+'-'+faiss_style+'-k'+str(k)+'-QPS'
     plt.title(plt_title)
 
     # 添加图例，并设置位置在图外
@@ -278,8 +279,10 @@ if __name__ == "__main__":
     # 创建多组实验所采用的数据集
     # get_multiple_data(data_choice='glove',dim=25,n_piece=[5,10],M=[4,16,32],efConstruction=[100,300,500])
 
+    # k取10，100，1000，10000，100000进行测试
+    k=10000
     # 进行多组实验：输出一个双层字典，key是data_key，value是对应的recall和qps字典
-    result_dict=get_multiple_QPS(data_choice='glove',dim=25,n_piece=[5,10],M=[4,16,32],efConstruction=[100,300,500],k=10)
+    result_dict=get_multiple_QPS(data_choice='glove',dim=25,n_piece=[5,10],M=[4,16,32],efConstruction=[100,300,500],k=k)
 
     # 可视化
-    plot_multiple_lines_qps(result_dict, data_choice='glove', dim=25,faiss_style='HNSW')
+    plot_multiple_lines_qps(result_dict, data_choice='glove', dim=25,faiss_style='HNSW',k=k)
