@@ -7,24 +7,27 @@ import time
 from config import *
 import matplotlib.pyplot as plt
 import seaborn as sns
+# 如果要用data_expand_info中的数据集，需要修改这里的data_info为data_expand_info,
+# 即data_name= data_info[data_choice][dim]修改成：data_name= data_expand_info[data_choice][dim]
+# 然后将获取数据的地址（f"data/{data_name}.hdf5"）修改成：f"data_expand/{data_name}.hdf5"
 
 # 单个数据处理
-def get_test_data_QPS(data_choice:str='glove',dim:int=25,number:int=100):#这里定义一个number是为了选取测试集数量，默认是100个
-    data_name= data_info[data_choice][dim] # 这里是为了方便创建文件夹和数据库文件名，方便识别
-    glove_file_path = f"data/{data_name}.hdf5"
+def get_test_data_QPS(data_choice:str='glove',dim:int=25,number:int=100,k:int=10):#这里定义一个number是为了选取测试集数量，默认是100个
+    data_name= data_expand_info[data_choice][dim] # 这里是为了方便创建文件夹和数据库文件名，方便识别
+    glove_file_path = f"data_expand/{data_name}.hdf5"
     glove_hdf = h5py.File(glove_file_path, "r")# 读取数据
     glove_test = glove_hdf['test'][:number]# 获取测试查询数据
     if data_choice=='glove':
         faiss.normalize_L2(glove_test)# glove数据采用的angular距离，首先需要进行归一化,然后再进行faiss.METRIC_L2
-    glove_neighbors = glove_hdf['neighbors'][:number,:10]# 获取测试数据集
-    glove_distances = glove_hdf['distances'][:number,:10]# 获取测试数据集
+    glove_neighbors = glove_hdf['neighbors'][:number,:k]# 获取测试数据集
+    glove_distances = glove_hdf['distances'][:number,:k]# 获取测试数据集
     return glove_test,glove_neighbors,glove_distances
 
 # 数据分片
 def data_piece(data_choice:str='glove',n_piece:int=5,dim:int=25,M:int=16,efConstruction:int=500)->dict:# 如果data_choice是glove则dim必须是25,50,100,200，如果是sift则dim必须是128，否则会报错
     n_piece= n_piece#这里是用来定义切片的数量
-    data_name= data_info[data_choice][dim] # 这里是为了方便创建文件夹和数据库文件名，方便识别
-    glove_file_path = f"data/{data_name}.hdf5"# 数据地址，hdf5格式
+    data_name= data_expand_info[data_choice][dim] # 这里是为了方便创建文件夹和数据库文件名，方便识别
+    glove_file_path = f"data_expand/{data_name}.hdf5"# 数据地址，hdf5格式
     glove_hdf = h5py.File(glove_file_path, "r")# 读取数据
     length_all = len(glove_hdf['train'])# 获取数据的总长度  
     cut_point=int(length_all/n_piece)# 获取切分点,int是向下取整
@@ -39,8 +42,8 @@ def data_piece(data_choice:str='glove',n_piece:int=5,dim:int=25,M:int=16,efConst
 
 # 获取对应的索引
 def get_id(data_choice:str='glove',n_piece:int=5,dim:int=25):
-    data_name= data_info[data_choice][dim]
-    glove_file_path = f"data/{data_name}.hdf5"# 数据地址，hdf5格式
+    data_name= data_expand_info[data_choice][dim]
+    glove_file_path = f"data_expand/{data_name}.hdf5"# 数据地址，hdf5格式
     glove_hdf = h5py.File(glove_file_path, "r")# 读取数据
     length_all = len(glove_hdf['train'])# 获取数据的总长度  
     cut_point=int(length_all/n_piece)# 获取切分点,int是向下取整
@@ -104,9 +107,9 @@ def combine_list(data: list, ids: list, k: int = 10):
 # 获取搜索结果
 def get_search_result_HNSW_QPS(data_choice:str='glove',n_piece:int=5,dim:int=25,M:int=16,efConstruction:int=500,efsearch:int=10,k:int=10,number:int=100):# number是指定测试集的数量,要和get_test_data函数中的number一致
     # data_dict,data_name=data_piece(data_choice,n_piece,dim)
-    data_name= data_info[data_choice][dim] 
+    data_name= data_expand_info[data_choice][dim] 
     folder_path = create_index_folder_choice(data_name,n_piece,'HNSW',M,efConstruction)
-    golve_test,_,_=get_test_data_QPS(data_choice,dim,number)# 这是一个双层数组，因为有这么多测试数据集
+    golve_test,_,_=get_test_data_QPS(data_choice,dim,number,k)# 这是一个双层数组，因为有这么多测试数据集
     # 测试数据提取
     search_id=[]
     search_distance=[]
@@ -149,7 +152,7 @@ def calculate_recall_np(test_id, ground_truth_id):
 # 计算QPS和召回率
 def get_QPS(data_choice:str='glove',n_piece:int=5,dim:int=25,M:int=16,efConstruction:int=500,efsearch:int=10,k:int=10,number:int=100):
     # glove_test,distance_true和neighbors_true暂时没用到
-    _,neighbors_true,_=get_test_data_QPS(data_choice,dim,number)# 获取真实id
+    _,neighbors_true,_=get_test_data_QPS(data_choice,dim,number,k)# 获取真实id
     start_time = time.time()
     test_id,_=get_search_result_HNSW_QPS(data_choice,n_piece,dim,M,efConstruction,efsearch,k,number)
     end_time = time.time()
@@ -190,14 +193,14 @@ def get_multiple_QPS(data_choice:str='glove',dim:int=25,n_piece:list=[5],M:list=
     result_dict={}
     for i in npiece:
         for j in M:
-            for k in efConstruction:
-                data_name= data_info[data_choice][dim] 
-                data_key=data_name+'_M'+str(j)+'_efcon'+str(k)+'_n'+str(i)
+            for e in efConstruction:
+                data_name= data_expand_info[data_choice][dim] 
+                data_key=data_name+'_M'+str(j)+'_efcon'+str(e)+'_n'+str(i)
                 result_dict[data_key]={}
                 qps=[]
                 recall=[]
                 for l in efsearch:
-                    mean_reacall,qps_=get_QPS(data_choice,n_piece=i,dim=dim,M=j,efConstruction=k,efsearch=l,k=k,number=number)
+                    mean_reacall,qps_=get_QPS(data_choice,n_piece=i,dim=dim,M=j,efConstruction=e,efsearch=l,k=k,number=number)
                     qps.append(qps_)
                     recall.append(mean_reacall)
                 result_dict[data_key]['recall']=np.array(recall)
@@ -207,7 +210,7 @@ def get_multiple_QPS(data_choice:str='glove',dim:int=25,n_piece:list=[5],M:list=
 # 可视化-------------------------------------------
 # 创建存储图片所需要的文件夹
 def create_photo_store_qps(data_choice:str='glove',dim:int=25,faiss_style:str='HNSW')->str:
-    data_name= data_info[data_choice][dim]
+    data_name= data_expand_info[data_choice][dim]
     folder_path = f"figure/{data_name}_{faiss_style}_QPS"
     # 检查文件夹是否存在
     if not os.path.exists(folder_path):
@@ -220,7 +223,7 @@ def create_photo_store_qps(data_choice:str='glove',dim:int=25,faiss_style:str='H
 
 def plot_multiple_lines_qps( data_dict: dict, data_choice: str = 'glove', dim: int = 25,faiss_style:str='HNSW'):
     # 创建文件夹并确定文件路径
-    data_name= data_info[data_choice][dim] 
+    data_name= data_expand_info[data_choice][dim] 
     folder_path = create_photo_store_qps(data_choice, dim,faiss_style)
     file_path = f"{folder_path}/{faiss_style}_multiple_lines.png"
     num_lines = len(data_dict)
@@ -266,13 +269,17 @@ if __name__ == "__main__":
     存储图片的文件夹：figure/glove-25-angular_HNSW_QPS
     存储图片的文件：HNSW_QPS_multiple_lines.png
 
+    如果要用data_expand_info中的数据集，需要修改这里的data_info为data_expand_info,
+    即data_name= data_info[data_choice][dim]修改成：data_name= data_expand_info[data_choice][dim]
+    然后将获取数据的地址（f"data/{data_name}.hdf5"）修改成：f"data_expand/{data_name}.hdf5"
+
     如果命名不规范可能会导致查询不到对应的数据而报错
     '''
     # 创建多组实验所采用的数据集
     # get_multiple_data(data_choice='glove',dim=25,n_piece=[5,10],M=[4,16,32],efConstruction=[100,300,500])
 
     # 进行多组实验：输出一个双层字典，key是data_key，value是对应的recall和qps字典
-    result_dict=get_multiple_QPS(data_choice='glove',dim=25,n_piece=[5,10],M=[4,16,32],efConstruction=[100,300,500])
+    result_dict=get_multiple_QPS(data_choice='glove',dim=25,n_piece=[5,10],M=[4,16,32],efConstruction=[100,300,500],k=10)
 
     # 可视化
     plot_multiple_lines_qps(result_dict, data_choice='glove', dim=25,faiss_style='HNSW')
