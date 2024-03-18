@@ -13,6 +13,9 @@ import time
 from itertools import product
 from config import *
 import matplotlib.pyplot as plt
+# 如果要用data_expand_info中的数据集，需要修改这里的data_info为data_expand_info,
+# 即data_name= data_info[data_choice][dim]修改成：data_name= data_expand_info[data_choice][dim]
+# 然后将获取数据的地址（f"data/{data_name}.hdf5"）修改成：f"data_expand/{data_name}.hdf5"
 
 # 单个数据处理
 def get_test_data_QPS(data_choice:str='glove',dim:int=25,number:int=100):#这里定义一个number是为了选取测试集数量，默认是100个
@@ -281,6 +284,10 @@ if __name__ == "__main__":
     存储图片的文件夹：figure/glove-25-angular_IVFPQR_QPS
     存储图片的文件：IVFPQR_QPS_multiple_lines.png
 
+    如果要用data_expand_info中的数据集，需要修改这里的data_info为data_expand_info,
+    即data_name= data_info[data_choice][dim]修改成：data_name= data_expand_info[data_choice][dim]
+    然后将获取数据的地址（f"data/{data_name}.hdf5"）修改成：f"data_expand/{data_name}.hdf5"
+
     如果命名不规范可能会导致查询不到对应的数据而报错
     '''
     # 创建多组实验所采用的数据集
@@ -288,6 +295,6 @@ if __name__ == "__main__":
 
     # 进行多组实验：输出一个双层字典，key是data_key，value是对应的recall和qps字典
     result_dict=get_multiple_QPS(data_choice='glove',dim=25,n_piece=[5],nlist=[128,256,512],M=[5],nbits=[8],M_refine=[5],nbits_refine=[8])
-    # ,nprobe=[1,2,4,6,8,10,15,20,50,100],k=10,number=100可以省略，默认就可以
+    # ,nprobe=[1,2,4,6,8,10,15,20,50,100],k=10,number=1000可以省略，默认就可以
     # 可视化
     plot_multiple_lines_qps(result_dict, data_choice='glove', dim=25,faiss_style='IVFPQR')
