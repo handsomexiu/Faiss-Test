@@ -280,9 +280,10 @@ if __name__ == "__main__":
     # get_multiple_data(data_choice='glove',dim=25,n_piece=[5,10],M=[4,16,32],efConstruction=[100,300,500])
 
     # k取10，100，1000，10000，100000进行测试
-    k=10000
+    k=100000
     # 进行多组实验：输出一个双层字典，key是data_key，value是对应的recall和qps字典
     result_dict=get_multiple_QPS(data_choice='glove',dim=25,n_piece=[5,10],M=[4,16,32],efConstruction=[100,300,500],k=k)
+    # result_dict=get_multiple_QPS(data_choice='glove',dim=25,n_piece=[5],M=[4],efConstruction=[300],efsearch=[1,3,5,7,10,15,20,30,40,60,80,100,500],k=k,number=1000)
 
     # 可视化
     plot_multiple_lines_qps(result_dict, data_choice='glove', dim=25,faiss_style='HNSW',k=k)
