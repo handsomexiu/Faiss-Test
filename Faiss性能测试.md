@@ -752,7 +752,7 @@ print(len(hdf['test']))
 
 ------
 
-**==HNSW和ivfflat，如果召回的向量数量没有达到top k：比如我们设置topk=10000,nprobe=1，此时意味着算法就在最近的一个聚类（或者分区，分块）内进行遍历，此时聚类中的向量才3000个，这时不够的就会用-1填充。==**
+**==HNSW和ivfflat，如果召回的向量数量没有达到top k：比如我们设置topk=10000,nprobe=1，此时意味着算法就在最近的一个聚类（或者分区，分块）内进行遍历，此时聚类中的向量才3000个，这时不够的就会用-1填充（id），距离用无穷大来填补。==**
 
 
 
@@ -1088,3 +1088,78 @@ D, I = pq.search (x_query, k)            # Perform a search
 - IVFPQ不同nbits创建数据库的时间变化巨大
 
   - ![ivfpq_nbits_测试时间对比](photo/ivfpq_nbits_测试时间对比.png)
+
+# Statistics for non-exhaustive search
+
+Non-exhaustive search means that only part of the database vectors are compared with. This is the case with `IndexIVF` variants and `IndexHSNW` variants.
+
+The number of distances that are effectively computed are collected in global variables. For `IndexIVF` this is `indexIVF_stats.ndis`, for `HNSW` it is `hnsw_stats.ndis`. These statistics are guaranteed to be accurate only if the `search` function is not called from multiple threads.
+
+To access the variables in Python, just prefix with `faiss.cvar`, eg. `faiss.cvar.indexIVF_stats.ndis` will contain the number of distances computed so far.
+
+- faiss.cvar.indexIVF_stats.ndis 将包含迄今为止计算出的距离数。用来统计计算的数量
+
+
+
+我们就以IVFFLat为例，同时结合上面的：`HNSW和ivfflat，如果召回的向量数量没有达到top k：比如我们设置topk=10000,nprobe=1，此时意味着算法就在最近的一个聚类（或者分区，分块）内进行遍历，此时聚类中的向量才3000个，这时不够的就会用-1填充（id），距离用无穷大来填补。`
+
+```python
+# 前面的代码省略
+def get_search_result_IVFFLat_QPS(data_choice:str='glove',n_piece:int=5,dim:int=25,nlist:int=100,nprobe:int=1,k:int=10,number:int=100):# number是指定测试集的数量,要和get_test_data函数中的number一致
+    # data_dict,data_name=data_piece(data_choice,n_piece,dim)
+    data_name= data_expand_info[data_choice][dim] 
+    folder_path = create_index_folder_choice(data_name,n_piece,'IVFFlat',nlist)
+    golve_test,_,_=get_test_data_QPS(data_choice,dim,number,k)# 这是一个双层数组，因为有这么多测试数据集
+    # 测试数据提取
+    search_id=[]
+    search_distance=[]
+    id_dict=get_id(data_choice,n_piece,dim)
+    for i in range(n_piece):
+        data_key=data_name+'_nlist'+str(nlist)+'_n'+str(n_piece)+'_'+str(i+1)
+        keys='npiece_'+str(i+1)
+        print(f'正在处理数据集{data_key}')
+        file_path = f"{folder_path}/{data_key}.index"
+        index = faiss.read_index(file_path)
+        # 设置搜索参数
+        index.nprobe = nprobe
+        sd,sid=index.search(golve_test, 100000)
+        print(sid.shape)
+        print(sd)
+        print(sid)
+        return sd,sid
+    
+sd,sid=get_search_result_IVFFLat_QPS(data_choice='glove',n_piece=5,dim=25,nlist=128,nprobe=1,k=10000,number=1)
+
+# faiss.cvar.indexIVF_stats的使用
+stats = faiss.cvar.indexIVF_stats
+print(stats.ndis)# 这里会得到我们计算的向量的数量：也就是说计算量
+stats.reset()#如果不重置会一直累加，所以得重置   
+
+>>> 3400
+
+# 统计一下-1的数量
+count=0
+for i in sid[0]:
+    if i==-1:
+        count+=1
+print(count)
+print(np.count_nonzero(sid == -1))
+
+>>> 96600
+# 这里正好是100000-3400
+#也就是说非-1的是3400，总共进行了3400次计算
+
+# nprobe决定了计算的聚类的数据量——本质上决定了计算量，最大计算量不超过数据集的规模
+# nprobe越大计算量越大
+# 哪怕我只召回10个向量，我nprobe取1000（这样基本可以遍历所有向量），那也会遍历所有向量
+# 尽管召回的向量满了，他也会继续遍历nprobe个类中的所有向量
+
+sd,sid=get_search_result_IVFFLat_QPS(data_choice='glove',n_piece=5,dim=25,nlist=128,nprobe=128,k=10000,number=1)
+stats = faiss.cvar.indexIVF_stats
+print(stats.ndis)
+stats.reset()
+
+>>> 236702
+# 236702是这个所有的向量
+```
+
