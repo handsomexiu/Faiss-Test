@@ -752,6 +752,10 @@ print(len(hdf['test']))
 
 ------
 
+**==HNSW和ivfflat，如果召回的向量数量没有达到top k：比如我们设置topk=10000,nprobe=1，此时意味着算法就在最近的一个聚类（或者分区，分块）内进行遍历，此时聚类中的向量才3000个，这时不够的就会用-1填充。==**
+
+
+
 ## HNWS 不同参数测试
 
 有一点需要注意的是，我们由于有分片操作因此我们在创建数据集的时候采用了IDMap_index方法
@@ -969,6 +973,7 @@ index_ivf_flat_2.add(data)
   - At query time, a set of `nprobe` inverted lists is selected
   - The `nprobe` is specified at query time (useful for measuring trade-offs between speed and accuracy).
   - `nprobe`: 在多少个聚类中进行搜索，默认为`1`,`nprobe`越大，结果越精确，但是速度越慢
+  - 注意`nprobe`好像没有默认值，但好多blog上都写了默认值为1。
 
 
 
