@@ -1163,3 +1163,4 @@ stats.reset()
 # 236702是这个所有的向量
 ```
 
+==通过检测nprobe的默认值确实是1，直接将get_search_result_IVFFLat_QPS中的index.nprobe = nprobe注释掉然后观察faiss.cvar.indexIVF_stats.ndis即可==
