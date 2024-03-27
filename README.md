@@ -258,6 +258,28 @@ if __name__ == "__main__":
     get_data(filename, out_put_fn, 'angular', 'float', count)
 ```
 
+----
+
+# HNSW-qps-debug
+
+**debug.ipynb**
+
+- 这个是用来测试每个程序每个模块包括：测试数据提取，召回，合并所需要的时间，并保存到`xlsx`文件中
+
+**hnsw_n_piecek.ipynb**
+
+- 这个是用来测试不同的topk对实验的影响
+
+# ivf-flat范围测试
+
+这个是用来测试ivf-flat的范围测试
+
+- range-search测试
+- topk测试
+- faiss.cvar.indexIVF_stats使用
+- range-search&topk-联合实验
+  - 迭代式的获取半径，范围约束
+
 
 
 # 文件修改说明
